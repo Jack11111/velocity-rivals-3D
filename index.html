@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<title>Velocity Rivals 3D</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#07111f;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+#game{position:fixed;inset:0}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+#hud{position:fixed;inset:0;pointer-events:none;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.8)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;padding:16px}
+.cluster{display:flex;gap:10px;align-items:center}
+.badge{background:rgba(6,15,28,.72);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(12px);border-radius:18px;padding:10px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25)}
+.pos{font-size:30px;font-weight:900;line-height:1}
+.small{font-size:11px;opacity:.72;font-weight:700;letter-spacing:.06em}
+.bar{width:min(34vw,280px);height:7px;border-radius:999px;background:rgba(255,255,255,.18);overflow:hidden;margin-top:7px}
+.bar>div{height:100%;width:0;background:#fff;border-radius:999px}
+#item{position:fixed;right:18px;bottom:18px;width:86px;height:86px;border-radius:24px;background:linear-gradient(145deg,rgba(19,38,72,.94),rgba(4,9,18,.96));border:2px solid rgba(255,255,255,.6);color:#fff;font-size:34px;font-weight:900;pointer-events:auto;box-shadow:0 12px 36px rgba(0,0,0,.42),inset 0 0 24px rgba(255,255,255,.08)}
+#item:disabled{opacity:.42}
+#speed{position:fixed;left:18px;bottom:20px}
+#speed b{display:block;font-size:28px;line-height:1}
+#message{position:fixed;top:18%;left:50%;transform:translate(-50%,-50%) scale(.86);font-size:44px;font-weight:1000;opacity:0;transition:.18s;white-space:nowrap}
+#message.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#menu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(rgba(0,0,0,.05),rgba(0,0,0,.58));pointer-events:auto}
+.panel{width:min(390px,86vw);border-radius:28px;padding:26px;color:#fff;text-align:center;background:rgba(4,12,24,.82);border:1px solid rgba(255,255,255,.17);backdrop-filter:blur(15px);box-shadow:0 28px 90px rgba(0,0,0,.46)}
+.title{font-size:42px;line-height:.92;font-weight:1000;letter-spacing:-.04em}
+.subtitle{font-size:14px;line-height:1.5;opacity:.82;margin:15px 0 20px}
+#play{width:100%;min-height:52px;border:0;border-radius:16px;background:#fff;color:#07111f;font-size:16px;font-weight:900}
+.tip{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:800;opacity:.72}
+#loading{margin-top:10px;font-size:12px;opacity:.72}
+@media (max-width:600px){.top{padding:12px}.badge{padding:8px 11px;border-radius:15px}.pos{font-size:25px}.bar{width:36vw}.title{font-size:36px}#message{font-size:34px}#item{width:74px;height:74px;border-radius:21px;font-size:30px}.tip{bottom:100px}}
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.179.1/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="game"></div>
+<div id="hud">
+  <div class="top">
+    <div class="cluster">
+      <div class="badge"><div class="small">POSITION</div><div class="pos"><span id="rank">6</span><span style="font-size:14px;opacity:.7"> / 6</span></div></div>
+      <div class="badge"><div class="small">RACE PROGRESS</div><div class="bar"><div id="progress"></div></div></div>
+    </div>
+    <div class="badge"><div class="small">LAP</div><b>1 / 1</b></div>
+  </div>
+  <div id="message">GO!</div>
+  <div id="speed" class="badge"><b>0</b><span class="small">KM/H</span></div>
+  <div class="tip badge">DRAG LEFT / RIGHT TO STEER</div>
+</div>
+<button id="item" disabled>?</button>
+<div id="menu">
+  <div class="panel">
+    <div class="title">VELOCITY<br>RIVALS</div>
+    <div class="subtitle">Fast arcade racing with combat pickups. Automatic acceleration, drag steering, six racers, homing rockets, mines and turbo boosts.</div>
+    <button id="play" disabled>LOADING 3D ASSETS…</button>
+    <div id="loading">Preparing track and vehicles</div>
+  </div>
+</div>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
