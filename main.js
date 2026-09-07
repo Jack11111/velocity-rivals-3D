@@ -239,9 +239,9 @@ window.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')targetLane=Math.max
 function update(dt){
   raceTime+=dt;
   // This version runs 10x faster than the previous build.
-  // The race now ramps from 50x to 250x the original prototype pace.
+  // The race now ramps from 500x to 2500x the original prototype pace.
   const launchSpeedFactor=1+4*(1-Math.exp(-raceTime*1.8));
-  const raceSpeedFactor=launchSpeedFactor*50;
+  const raceSpeedFactor=launchSpeedFactor*500;
   const speedMul=boost>0?1.38:1;
   if(boost>0)boost-=dt;
   playerT=Math.min(1,playerT+dt*.022*raceSpeedFactor*speedMul);
