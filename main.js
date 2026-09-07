@@ -1,3 +1,4 @@
+
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
@@ -237,14 +238,18 @@ window.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')targetLane=Math.max
 
 function update(dt){
   raceTime+=dt;
+  // This version runs 10x faster than the previous build.
+  // The race now ramps from 50x to 250x the original prototype pace.
   const launchSpeedFactor=1+4*(1-Math.exp(-raceTime*1.8));
-  const raceSpeedFactor=launchSpeedFactor*5;
+  const raceSpeedFactor=launchSpeedFactor*50;
   const speedMul=boost>0?1.38:1;
   if(boost>0)boost-=dt;
   playerT=Math.min(1,playerT+dt*.022*raceSpeedFactor*speedMul);
   lane+=(targetLane-lane)*Math.min(1,dt*13);
   placeCar(player,playerT,lane);
 
+  // Lean into steering input. The tilt is deliberately subtle (~9 degrees max)
+  // so it reads as weight transfer without making the car look like a motorcycle.
   const turnAmount=THREE.MathUtils.clamp((targetLane-lane)*1.8,-1,1);
   const trackRoll=-Math.asin(THREE.MathUtils.clamp(basisAt(playerT).tangent.y,-1,1))*.4;
   const targetRoll=trackRoll-turnAmount*.16;
@@ -262,7 +267,7 @@ function update(dt){
 
   pickups.forEach(p=>{
     p.mesh.rotation.x+=dt*1.5;p.mesh.rotation.y+=dt*2.4;
-    if(!p.taken&&Math.abs(p.t-playerT)<.018&&Math.abs(p.lane-lane)<1.7){
+    if(!p.taken&&Math.abs(p.t-playerT)<.05&&Math.abs(p.lane-lane)<1.7){
       p.taken=true;p.mesh.visible=false;
       if(!currentItem){const r=Math.random();setItem(r<.47?'rocket':r<.75?'boost':'mine');showMsg('ITEM READY');burst(player.position,0x65e6ff,18,3)}
     }
@@ -272,13 +277,13 @@ function update(dt){
     m.life-=dt;
     const tp=m.target.mesh.position;
     m.mesh.position.lerp(tp,.30);
-    const dir=tp.clone().sub(m.mesh.position).normalize();m.mesh.position.addScaledVector(dir,dt*300);
+    const dir=tp.clone().sub(m.mesh.position).normalize();m.mesh.position.addScaledVector(dir,dt*1200);
     m.mesh.rotation.z+=dt*18;
     if(m.mesh.position.distanceTo(tp)<2.4){m.target.stun=1.4;m.target.speedScale=Math.min(m.target.speedScale,.18);m.life=0;shake=.38;showMsg('DIRECT HIT!');burst(tp,0xffb532,34,7)}
   });
   for(let i=missiles.length-1;i>=0;i--)if(missiles[i].life<=0){world.remove(missiles[i].mesh);missiles.splice(i,1)}
 
-  mines.forEach(m=>{m.life-=dt;ais.forEach(a=>{if(m.life>0&&Math.abs(a.t-m.t)<.015&&Math.abs(a.lane-m.lane)<2.0){a.stun=1.2;a.speedScale=Math.min(a.speedScale,.28);m.life=0;burst(m.mesh.position,0xff5a44,28,6)}})});
+  mines.forEach(m=>{m.life-=dt;ais.forEach(a=>{if(m.life>0&&Math.abs(a.t-m.t)<.04&&Math.abs(a.lane-m.lane)<2.0){a.stun=1.2;a.speedScale=Math.min(a.speedScale,.28);m.life=0;burst(m.mesh.position,0xff5a44,28,6)}})});
   for(let i=mines.length-1;i>=0;i--)if(mines[i].life<=0){world.remove(mines[i].mesh);mines.splice(i,1)}
 
   particles.forEach(p=>{p.life-=dt;p.m.position.addScaledVector(p.v,dt);p.v.y-=4.8*dt;p.m.material.opacity=Math.max(0,p.life/.8)});
