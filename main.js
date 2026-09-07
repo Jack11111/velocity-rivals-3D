@@ -15,7 +15,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x78b8e8);
 scene.fog = new THREE.FogExp2(0x9cc7e4, 0.0085);
 
-const camera = new THREE.PerspectiveCamera(62, innerWidth/innerHeight, .1, 550);
+const camera = new THREE.PerspectiveCamera(72, innerWidth/innerHeight, .1, 550);
 const renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.8));
 renderer.setSize(innerWidth,innerHeight);
@@ -185,7 +185,7 @@ async function loadCars(){
   const models=await Promise.all(CAR_URLS.map(loadGLB));
   cars=models.map(prepModel);
   player=cars[0];world.add(player);
-  ais=cars.slice(1).map((mesh,i)=>({mesh,t:.015+i*.009,lane:[-4,3,-1.5,4,-3][i],speed:.0029+Math.random()*.00025,stun:0,spin:0,phase:i*1.7}));
+  ais=cars.slice(1).map((mesh,i)=>({mesh,t:.015+i*.009,lane:[-4,3,-1.5,4,-3][i],speed:.0205+Math.random()*.0022,stun:0,spin:0,speedScale:1,phase:i*1.7}));
   ais.forEach(a=>world.add(a.mesh));
 }
 
@@ -207,7 +207,7 @@ function placeCar(mesh,t,laneValue){
 function reset(){
   playerT=0;lane=targetLane=0;boost=0;setItem(null);shake=0;
   pickups.forEach(p=>{p.taken=false;p.mesh.visible=true});
-  ais.forEach((a,i)=>{a.t=.015+i*.009;a.stun=0;a.spin=0});
+  ais.forEach((a,i)=>{a.t=.015+i*.009;a.stun=0;a.spin=0;a.speedScale=1});
   missiles.forEach(x=>world.remove(x.mesh));missiles=[];
   mines.forEach(x=>world.remove(x.mesh));mines=[];
   running=true;menu.style.display='none';showMsg('GO!');
@@ -236,15 +236,19 @@ renderer.domElement.addEventListener('pointercancel',()=>dragging=false);
 window.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')targetLane=Math.max(-5.2,targetLane-.8);if(e.key==='ArrowRight')targetLane=Math.min(5.2,targetLane+.8);if(e.code==='Space')useItem()});
 
 function update(dt){
-  const speedMul=boost>0?1.48:1;
+  const speedMul=boost>0?1.38:1;
   if(boost>0)boost-=dt;
-  playerT=Math.min(1,playerT+dt*.00305*speedMul);
+  playerT=Math.min(1,playerT+dt*.022*speedMul);
   lane+=(targetLane-lane)*Math.min(1,dt*8);
   placeCar(player,playerT,lane);
   player.rotation.z+=( -(targetLane-lane)*.08-player.rotation.z)*dt*5;
 
   ais.forEach(a=>{
-    a.t=Math.min(1,a.t+dt*a.speed*(a.stun>0?.35:1));
+    // Impacts now cause a real loss of race speed, separate from the spin/stun animation.
+    // The car then accelerates back to full pace over a few seconds.
+    if(a.speedScale<1)a.speedScale=Math.min(1,a.speedScale+dt*.34);
+    const impactAnimScale=a.stun>0?.72:1;
+    a.t=Math.min(1,a.t+dt*a.speed*a.speedScale*impactAnimScale);
     if(a.stun>0){a.stun-=dt;a.spin+=dt*10}
     const aiLane=a.lane+Math.sin(a.t*60+a.phase)*1.1;
     placeCar(a.mesh,a.t,aiLane);
@@ -265,11 +269,11 @@ function update(dt){
     m.mesh.position.lerp(tp,.16);
     const dir=tp.clone().sub(m.mesh.position).normalize();m.mesh.position.addScaledVector(dir,dt*24);
     m.mesh.rotation.z+=dt*10;
-    if(m.mesh.position.distanceTo(tp)<1.7){m.target.stun=1.4;m.life=0;shake=.38;showMsg('DIRECT HIT!');burst(tp,0xffb532,34,7)}
+    if(m.mesh.position.distanceTo(tp)<1.7){m.target.stun=1.4;m.target.speedScale=Math.min(m.target.speedScale,.18);m.life=0;shake=.38;showMsg('DIRECT HIT!');burst(tp,0xffb532,34,7)}
   });
   for(let i=missiles.length-1;i>=0;i--)if(missiles[i].life<=0){world.remove(missiles[i].mesh);missiles.splice(i,1)}
 
-  mines.forEach(m=>{m.life-=dt;ais.forEach(a=>{if(m.life>0&&Math.abs(a.t-m.t)<.006&&Math.abs(a.lane-m.lane)<1.7){a.stun=1.2;m.life=0;burst(m.mesh.position,0xff5a44,28,6)}})});
+  mines.forEach(m=>{m.life-=dt;ais.forEach(a=>{if(m.life>0&&Math.abs(a.t-m.t)<.006&&Math.abs(a.lane-m.lane)<1.7){a.stun=1.2;a.speedScale=Math.min(a.speedScale,.28);m.life=0;burst(m.mesh.position,0xff5a44,28,6)}})});
   for(let i=mines.length-1;i>=0;i--)if(mines[i].life<=0){world.remove(mines[i].mesh);mines.splice(i,1)}
 
   particles.forEach(p=>{p.life-=dt;p.m.position.addScaledVector(p.v,dt);p.v.y-=4.8*dt;p.m.material.opacity=Math.max(0,p.life/.8)});
@@ -278,15 +282,15 @@ function update(dt){
   const ranks=[playerT,...ais.map(a=>a.t)].sort((a,b)=>b-a);
   rankEl.textContent=ranks.indexOf(playerT)+1;
   progressEl.style.width=(playerT*100).toFixed(1)+'%';
-  speedEl.textContent=Math.round(165*speedMul);
+  speedEl.textContent=Math.round(245*speedMul);
 
   const b=basisAt(playerT);
-  const behind=b.p.clone().addScaledVector(b.tangent,-10.5).addScaledVector(b.normal,5.2).addScaledVector(b.right,lane*.18);
+  const behind=b.p.clone().addScaledVector(b.tangent,-8.8).addScaledVector(b.normal,4.15).addScaledVector(b.right,lane*.16);
   if(shake>0){behind.x+=(Math.random()-.5)*shake;behind.y+=(Math.random()-.5)*shake;shake=Math.max(0,shake-dt*1.6)}
   camera.position.lerp(behind,1-Math.pow(.001,dt));
-  const look=b.p.clone().addScaledVector(b.tangent,12).addScaledVector(b.normal,1.2);
+  const look=b.p.clone().addScaledVector(b.tangent,18).addScaledVector(b.normal,1.0);
   camera.lookAt(look);
-  const targetFov=boost>0?70:62;camera.fov+=(targetFov-camera.fov)*dt*5;camera.updateProjectionMatrix();
+  const targetFov=boost>0?82:72;camera.fov+=(targetFov-camera.fov)*dt*5;camera.updateProjectionMatrix();
 
   if(playerT>=1){
     running=false;setItem(null);
@@ -310,7 +314,7 @@ window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camer
     loadingEl.textContent='Loading polished car models…';
     await loadCars();
     placeCar(player,0,0);ais.forEach(a=>placeCar(a.mesh,a.t,a.lane));
-    const b=basisAt(0);camera.position.copy(b.p).addScaledVector(b.tangent,-10).addScaledVector(b.normal,5.2);camera.lookAt(b.p.clone().addScaledVector(b.tangent,12));
+    const b=basisAt(0);camera.position.copy(b.p).addScaledVector(b.tangent,-8.8).addScaledVector(b.normal,4.15);camera.lookAt(b.p.clone().addScaledVector(b.tangent,18));
     playBtn.disabled=false;playBtn.textContent='START RACE';loadingEl.textContent='Ready';
   }catch(err){
     console.error(err);
