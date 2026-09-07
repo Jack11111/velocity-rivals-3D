@@ -189,7 +189,7 @@ async function loadCars(){
   ais.forEach(a=>world.add(a.mesh));
 }
 
-let running=false,targetLane=0,lane=0,playerT=0,boost=0,currentItem=null,last=performance.now(),dragging=false,dragX=0,dragLane=0,missiles=[],mines=[],shake=0;
+let running=false,targetLane=0,lane=0,playerT=0,boost=0,currentItem=null,last=performance.now(),dragging=false,dragX=0,dragLane=0,missiles=[],mines=[],shake=0,raceTime=0;
 
 function showMsg(s){
   msgEl.textContent=s;msgEl.classList.add('show');clearTimeout(showMsg.t);showMsg.t=setTimeout(()=>msgEl.classList.remove('show'),800);
@@ -205,7 +205,7 @@ function placeCar(mesh,t,laneValue){
   mesh.rotation.z=-Math.asin(THREE.MathUtils.clamp(b.tangent.y,-1,1))*.4;
 }
 function reset(){
-  playerT=0;lane=targetLane=0;boost=0;setItem(null);shake=0;
+  playerT=0;lane=targetLane=0;boost=0;raceTime=0;setItem(null);shake=0;
   pickups.forEach(p=>{p.taken=false;p.mesh.visible=true});
   ais.forEach((a,i)=>{a.t=.015+i*.009;a.stun=0;a.spin=0;a.speedScale=1});
   missiles.forEach(x=>world.remove(x.mesh));missiles=[];
@@ -236,19 +236,23 @@ renderer.domElement.addEventListener('pointercancel',()=>dragging=false);
 window.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')targetLane=Math.max(-5.2,targetLane-.8);if(e.key==='ArrowRight')targetLane=Math.min(5.2,targetLane+.8);if(e.code==='Space')useItem()});
 
 function update(dt){
+  raceTime+=dt;
+  // Start around the previous race pace, then surge rapidly to 5x that speed.
+  // The exponential curve is nearly at full speed after about two seconds.
+  const launchSpeedFactor=1+4*(1-Math.exp(-raceTime*1.8));
   const speedMul=boost>0?1.38:1;
   if(boost>0)boost-=dt;
-  playerT=Math.min(1,playerT+dt*.022*speedMul);
-  lane+=(targetLane-lane)*Math.min(1,dt*8);
+  playerT=Math.min(1,playerT+dt*.022*launchSpeedFactor*speedMul);
+  lane+=(targetLane-lane)*Math.min(1,dt*9.5);
   placeCar(player,playerT,lane);
-  player.rotation.z+=( -(targetLane-lane)*.08-player.rotation.z)*dt*5;
+  player.rotation.z+=( -(targetLane-lane)*.08-player.rotation.z)*dt*6;
 
   ais.forEach(a=>{
-    // Impacts now cause a real loss of race speed, separate from the spin/stun animation.
+    // Impacts cause a real loss of race speed in addition to the spin/stun effect.
     // The car then accelerates back to full pace over a few seconds.
     if(a.speedScale<1)a.speedScale=Math.min(1,a.speedScale+dt*.34);
     const impactAnimScale=a.stun>0?.72:1;
-    a.t=Math.min(1,a.t+dt*a.speed*a.speedScale*impactAnimScale);
+    a.t=Math.min(1,a.t+dt*a.speed*launchSpeedFactor*a.speedScale*impactAnimScale);
     if(a.stun>0){a.stun-=dt;a.spin+=dt*10}
     const aiLane=a.lane+Math.sin(a.t*60+a.phase)*1.1;
     placeCar(a.mesh,a.t,aiLane);
@@ -257,7 +261,7 @@ function update(dt){
 
   pickups.forEach(p=>{
     p.mesh.rotation.x+=dt*1.5;p.mesh.rotation.y+=dt*2.4;
-    if(!p.taken&&Math.abs(p.t-playerT)<.007&&Math.abs(p.lane-lane)<1.35){
+    if(!p.taken&&Math.abs(p.t-playerT)<.009&&Math.abs(p.lane-lane)<1.5){
       p.taken=true;p.mesh.visible=false;
       if(!currentItem){const r=Math.random();setItem(r<.47?'rocket':r<.75?'boost':'mine');showMsg('ITEM READY');burst(player.position,0x65e6ff,18,3)}
     }
@@ -266,14 +270,14 @@ function update(dt){
   missiles.forEach(m=>{
     m.life-=dt;
     const tp=m.target.mesh.position;
-    m.mesh.position.lerp(tp,.16);
-    const dir=tp.clone().sub(m.mesh.position).normalize();m.mesh.position.addScaledVector(dir,dt*24);
-    m.mesh.rotation.z+=dt*10;
-    if(m.mesh.position.distanceTo(tp)<1.7){m.target.stun=1.4;m.target.speedScale=Math.min(m.target.speedScale,.18);m.life=0;shake=.38;showMsg('DIRECT HIT!');burst(tp,0xffb532,34,7)}
+    m.mesh.position.lerp(tp,.22);
+    const dir=tp.clone().sub(m.mesh.position).normalize();m.mesh.position.addScaledVector(dir,dt*120);
+    m.mesh.rotation.z+=dt*14;
+    if(m.mesh.position.distanceTo(tp)<2.1){m.target.stun=1.4;m.target.speedScale=Math.min(m.target.speedScale,.18);m.life=0;shake=.38;showMsg('DIRECT HIT!');burst(tp,0xffb532,34,7)}
   });
   for(let i=missiles.length-1;i>=0;i--)if(missiles[i].life<=0){world.remove(missiles[i].mesh);missiles.splice(i,1)}
 
-  mines.forEach(m=>{m.life-=dt;ais.forEach(a=>{if(m.life>0&&Math.abs(a.t-m.t)<.006&&Math.abs(a.lane-m.lane)<1.7){a.stun=1.2;a.speedScale=Math.min(a.speedScale,.28);m.life=0;burst(m.mesh.position,0xff5a44,28,6)}})});
+  mines.forEach(m=>{m.life-=dt;ais.forEach(a=>{if(m.life>0&&Math.abs(a.t-m.t)<.008&&Math.abs(a.lane-m.lane)<1.9){a.stun=1.2;a.speedScale=Math.min(a.speedScale,.28);m.life=0;burst(m.mesh.position,0xff5a44,28,6)}})});
   for(let i=mines.length-1;i>=0;i--)if(mines[i].life<=0){world.remove(mines[i].mesh);mines.splice(i,1)}
 
   particles.forEach(p=>{p.life-=dt;p.m.position.addScaledVector(p.v,dt);p.v.y-=4.8*dt;p.m.material.opacity=Math.max(0,p.life/.8)});
@@ -282,15 +286,20 @@ function update(dt){
   const ranks=[playerT,...ais.map(a=>a.t)].sort((a,b)=>b-a);
   rankEl.textContent=ranks.indexOf(playerT)+1;
   progressEl.style.width=(playerT*100).toFixed(1)+'%';
-  speedEl.textContent=Math.round(245*speedMul);
+  speedEl.textContent=Math.round(245*launchSpeedFactor*speedMul);
 
   const b=basisAt(playerT);
-  const behind=b.p.clone().addScaledVector(b.tangent,-8.8).addScaledVector(b.normal,4.15).addScaledVector(b.right,lane*.16);
+  const highSpeed=(launchSpeedFactor-1)/4;
+  const cameraDistance=THREE.MathUtils.lerp(8.8,11.8,highSpeed);
+  const cameraHeight=THREE.MathUtils.lerp(4.15,4.7,highSpeed);
+  const behind=b.p.clone().addScaledVector(b.tangent,-cameraDistance).addScaledVector(b.normal,cameraHeight).addScaledVector(b.right,lane*.16);
   if(shake>0){behind.x+=(Math.random()-.5)*shake;behind.y+=(Math.random()-.5)*shake;shake=Math.max(0,shake-dt*1.6)}
-  camera.position.lerp(behind,1-Math.pow(.001,dt));
-  const look=b.p.clone().addScaledVector(b.tangent,18).addScaledVector(b.normal,1.0);
+  camera.position.lerp(behind,1-Math.pow(.0004,dt));
+  const look=b.p.clone().addScaledVector(b.tangent,THREE.MathUtils.lerp(18,28,highSpeed)).addScaledVector(b.normal,1.0);
   camera.lookAt(look);
-  const targetFov=boost>0?82:72;camera.fov+=(targetFov-camera.fov)*dt*5;camera.updateProjectionMatrix();
+  const normalFov=THREE.MathUtils.lerp(72,88,highSpeed);
+  const targetFov=boost>0?Math.min(96,normalFov+7):normalFov;
+  camera.fov+=(targetFov-camera.fov)*dt*7;camera.updateProjectionMatrix();
 
   if(playerT>=1){
     running=false;setItem(null);
