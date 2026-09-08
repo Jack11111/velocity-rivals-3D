@@ -47,4 +47,4 @@ THREE.Object3D.prototype.add = function (...objects) {
 
 // Load the performance layer before main.js so rendering and AI asset costs are
 // reduced without changing the approved gameplay/top speed.
-await import('./performance-fix.js?v=1');
+await import('./performance-fix.js?v=2');
