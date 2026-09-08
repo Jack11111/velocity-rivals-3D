@@ -40,7 +40,14 @@ window.fetch = async function vrFieldSizeFetch(input, init) {
     'eight-car starting lanes'
   );
 
-  source = source.replaceAll('`FINISHED ${final}/6`', '`FINISHED ${final}/8`');
+  // Update the result denominator here and pre-wire the podium trigger. The
+  // production loader adds finishCelebration() later in the assembled source.
+  source = replaceOnce(
+    source,
+    `    const final = [playerT, ...ais.map(a => a.t)].sort((a, b) => b - a).indexOf(playerT) + 1;\n    document.querySelector('.title').innerHTML = final === 1 ? 'VICTORY!' : \`FINISHED \${final}/6\`;`,
+    `    const final = [playerT, ...ais.map(a => a.t)].sort((a, b) => b - a).indexOf(playerT) + 1;\n    if (final <= 3) finishCelebration(final);\n    document.querySelector('.title').innerHTML = final === 1 ? 'VICTORY!' : \`FINISHED \${final}/8\`;`,
+    'eight-car finish result'
+  );
 
   return new Response(source, {
     status: response.status,
