@@ -45,9 +45,10 @@ THREE.Object3D.prototype.add = function (...objects) {
   return originalAdd.apply(this, objects);
 };
 
-// Load performance and control layers before main.js. The control layer
-// intercepts the base game module once, then main-loader applies the existing
-// long-course/finish tuning on top of it.
+// Load performance and control layers before main.js. v2 establishes the
+// auto-acceleration/collision model; v3 removes automatic curve-following so
+// the player must steer through every bend.
 await import('./performance-fix.js?v=2');
 await import('./controls-v2.js?v=1');
-await import('./controls-ui.js?v=1');
+await import('./controls-v3.js?v=1');
+await import('./controls-ui.js?v=2');
