@@ -45,6 +45,9 @@ THREE.Object3D.prototype.add = function (...objects) {
   return originalAdd.apply(this, objects);
 };
 
-// Load the performance layer before main.js so rendering and AI asset costs are
-// reduced without changing the approved gameplay/top speed.
+// Load performance and control layers before main.js. The control layer
+// intercepts the base game module once, then main-loader applies the existing
+// long-course/finish tuning on top of it.
 await import('./performance-fix.js?v=2');
+await import('./controls-v2.js?v=1');
+await import('./controls-ui.js?v=1');
