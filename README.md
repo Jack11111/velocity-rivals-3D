@@ -3,8 +3,11 @@
 A browser-based arcade combat racer built with Three.js.
 
 ## Included
-- High-detail PBR concept-car asset used for the racing field
-- Curved 3D coastal track with elevation changes
+- High-detail sports-car asset used for the racing field
+- Dark asphalt track with white lane markings and red/white curbs
+- Continuous glossy blue track walls
+- Coastal/marina environment with water, boats, palms, skyline and mountains
+- Blue banners, track lighting, portal structures and neon tunnel sections
 - Higher chase camera for improved track visibility
 - ACES tone mapping, environment reflections, soft shadows, restrained bloom and fog
 - Six-car race field with AI opponents
@@ -16,7 +19,7 @@ A browser-based arcade combat racer built with Three.js.
 - Drop mines
 - Item pickups
 - Particle bursts, speed streaks and camera shake
-- Responsive HUD for desktop and mobile
+- Responsive arcade-style HUD for desktop and mobile
 
 ## Controls
 ### Mobile
@@ -32,7 +35,7 @@ A browser-based arcade combat racer built with Three.js.
 - Space: use the current pickup
 
 ## Local run
-Use a local web server because the game uses JavaScript modules and remote GLB assets.
+Use a local web server because the game uses JavaScript modules and remote 3D assets.
 
 ```bash
 python3 -m http.server 8080
@@ -41,15 +44,15 @@ python3 -m http.server 8080
 Then open `http://localhost:8080`.
 
 ## Vehicle asset license
-The primary high-detail vehicle uses the Khronos glTF Sample Assets **Car Concept** model, modified at runtime for this game by hiding logo/branding nodes and applying game-specific liveries.
+The primary high-detail sports car is `SportsCar/Subdiv_Car.fbx` from **MirageYM/3DModels** by Yasutoshi Mori.
 
-Model and textures: © 2024 Darmstadt Graphics Group GmbH, Eric Chadwick. Licensed under **CC BY 4.0**.
+Copyright (c) 2015 Yasutoshi Mori. Licensed under the **Creative Commons Attribution 4.0 International License (CC BY 4.0)**.
 
-Source: https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CarConcept
+Source: https://github.com/MirageYM/3DModels
 
-The model originated from a public-domain base and was optimized as a high-quality glTF showcase asset. Khronos trademarks/logos are not used as game branding.
+License: https://github.com/MirageYM/3DModels/blob/master/LICENSE
 
-Fallback vehicle model: Kenney Car Kit, CC0 1.0.
+Fallback vehicle model: Kenney Car Kit `sedan-sports.glb`, CC0 1.0.
 
-## Production direction
-The game now uses a materially higher-quality PBR vehicle asset and a more controlled lighting/post-processing pipeline. Further visual improvements should focus on authored track/environment assets, higher-detail scenery, road textures, wheel/suspension animation, audio, garage/progression and level content rather than replacing the vehicle with procedural geometry.
+## Visual direction
+The game targets a glossy, vibrant arcade-racing presentation: sports coupes rather than open-wheel cars, dark asphalt, strong lane/curb definition, blue barriers, a sunny coastal marina, palm trees, skyline and mountains, and neon track architecture. The gameplay remains original and does not use proprietary Race Master assets, tracks, logos or branding.
