@@ -85,7 +85,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
         <div class="small">RACE PROGRESS</div>
         <div class="bar"><div id="progress"></div></div>
       </div>
-      <div class="level">LEVEL 2</div>
+      <div class="level">LEVEL 1</div>
     </div>
 
     <div class="rightHud">
@@ -112,7 +112,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 <div id="menu">
   <div class="panel">
     <div class="title">VELOCITY<br>RIVALS</div>
-    <div class="subtitle">Acceleration is automatic. Steering is fully manual: guide the car through every turn, dodge traffic and hazards, collect pickups, stay off the edges, and line up attacks.</div>
+    <div class="subtitle">Acceleration is automatic. Steering is fully manual: guide the car through every turn, dodge traffic, collect pickups, stay off the edges, and line up attacks.</div>
     <button id="play" disabled>LOADING 3D ASSETS…</button>
     <div id="loading">Preparing track and vehicles</div>
   </div>
@@ -122,6 +122,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   await import('./orientation-fix.js?v=5');
   await import('./missile-fx.js?v=1');
   await import('./item-fx.js?v=1');
+  await import('./level-one-rules.js?v=1');
   await import('./main-loader.js?v=4');
 </script>
 </body>
