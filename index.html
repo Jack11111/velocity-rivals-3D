@@ -5,31 +5,62 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
 <title>Velocity Rivals 3D</title>
 <style>
-html,body{margin:0;height:100%;overflow:hidden;background:#68c4ff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+:root{--navy:#123b69;--navy2:#071d3d;--blue:#0c77e7}
+html,body{margin:0;height:100%;overflow:hidden;background:#5db8ef;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 #game{position:fixed;inset:0}
 canvas{display:block;width:100%;height:100%;touch-action:none}
-#hud{position:fixed;inset:0;pointer-events:none;color:#fff;text-shadow:0 2px 10px rgba(5,25,55,.7)}
-.top{display:flex;justify-content:space-between;align-items:flex-start;padding:18px;gap:12px}
-.cluster{display:flex;gap:12px;align-items:center}
-.badge{background:linear-gradient(145deg,rgba(18,63,116,.88),rgba(8,35,78,.88));border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(12px);border-radius:18px;padding:10px 15px;box-shadow:0 10px 28px rgba(4,31,74,.28),inset 0 1px 0 rgba(255,255,255,.18)}
-.pos{font-size:31px;font-weight:1000;line-height:1}
-.small{font-size:11px;opacity:.8;font-weight:900;letter-spacing:.08em}
-.bar{width:min(36vw,310px);height:9px;border-radius:999px;background:rgba(255,255,255,.18);overflow:hidden;margin-top:8px;border:1px solid rgba(255,255,255,.16)}
-.bar>div{height:100%;width:0;background:linear-gradient(90deg,#7cff57,#eaff57);border-radius:999px;box-shadow:0 0 12px rgba(139,255,87,.65)}
-#item{position:fixed;right:20px;bottom:20px;width:88px;height:88px;border-radius:26px;background:linear-gradient(145deg,#2078dc,#0b326d);border:2px solid rgba(255,255,255,.75);color:#fff;font-size:36px;font-weight:1000;pointer-events:auto;box-shadow:0 14px 34px rgba(5,32,78,.42),inset 0 1px 0 rgba(255,255,255,.25)}
-#item:disabled{opacity:.45}
-#speed{position:fixed;left:20px;bottom:22px;min-width:75px}
-#speed b{display:block;font-size:30px;line-height:1}
-#message{position:fixed;top:18%;left:50%;transform:translate(-50%,-50%) scale(.86);font-size:44px;font-weight:1000;opacity:0;transition:.18s;white-space:nowrap;letter-spacing:.02em}
+#hud{position:fixed;inset:0;pointer-events:none;color:#fff;text-shadow:0 2px 10px rgba(5,25,55,.64)}
+.top{display:grid;grid-template-columns:auto minmax(220px,430px) auto;align-items:start;gap:16px;padding:18px}
+.badge{background:linear-gradient(155deg,rgba(26,76,132,.95),rgba(7,31,71,.94));border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(12px);border-radius:20px;padding:11px 16px;box-shadow:0 12px 30px rgba(4,31,74,.27),inset 0 1px 0 rgba(255,255,255,.18)}
+.small{font-size:11px;opacity:.86;font-weight:900;letter-spacing:.09em}
+.pos{font-size:34px;font-weight:1000;line-height:1;margin-top:2px}
+.centerHud{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.progressBadge{width:min(100%,430px);box-sizing:border-box}
+.bar{height:10px;border-radius:999px;background:rgba(255,255,255,.16);overflow:hidden;margin-top:8px;border:1px solid rgba(255,255,255,.18)}
+.bar>div{height:100%;width:0;background:linear-gradient(90deg,#67e64d,#d7f743);border-radius:999px;box-shadow:0 0 14px rgba(121,255,91,.5)}
+.level{font-size:44px;font-weight:1000;line-height:1;letter-spacing:.03em;text-shadow:0 4px 14px rgba(0,35,85,.42)}
+.rightHud{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.resource{display:flex;align-items:center;gap:8px;min-width:96px;justify-content:flex-end}
+.resource .icon{font-size:20px;line-height:1}
+.resource b{font-size:22px}
+#item{position:fixed;right:20px;bottom:24px;width:88px;height:88px;border-radius:26px;background:linear-gradient(145deg,#2d84df,#0a356f);border:2px solid rgba(255,255,255,.72);color:#fff;font-size:36px;font-weight:1000;pointer-events:auto;box-shadow:0 14px 34px rgba(5,32,78,.42),inset 0 1px 0 rgba(255,255,255,.25)}
+#item:disabled{opacity:.43}
+#speed{position:fixed;left:20px;bottom:24px;min-width:80px}
+#speed b{display:block;font-size:31px;line-height:1}
+#message{position:fixed;top:20%;left:50%;transform:translate(-50%,-50%) scale(.86);font-size:42px;font-weight:1000;opacity:0;transition:.18s;white-space:nowrap;letter-spacing:.02em}
 #message.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
-#menu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(rgba(22,101,177,.05),rgba(5,27,66,.58));pointer-events:auto}
-.panel{width:min(410px,86vw);border-radius:30px;padding:28px;color:#fff;text-align:center;background:linear-gradient(160deg,rgba(24,76,140,.9),rgba(7,31,73,.92));border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(16px);box-shadow:0 30px 90px rgba(4,26,66,.42),inset 0 1px 0 rgba(255,255,255,.2)}
-.title{font-size:44px;line-height:.92;font-weight:1000;letter-spacing:-.04em;text-shadow:0 4px 20px rgba(0,38,91,.5)}
-.subtitle{font-size:14px;line-height:1.5;opacity:.88;margin:16px 0 21px}
+.tip{position:fixed;bottom:118px;left:50%;transform:translateX(-50%);padding:17px 44px;text-align:center;font-size:16px;font-weight:1000;white-space:nowrap;border-radius:34px}
+.tip:after{content:"↔";display:block;font-size:38px;line-height:.8;margin-top:4px;opacity:.9}
+.bottomnav{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:6px;pointer-events:none}
+.navcard{width:104px;height:82px;border-radius:18px;background:linear-gradient(180deg,rgba(26,118,225,.96),rgba(6,66,143,.97));border:1px solid rgba(255,255,255,.2);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(3,34,80,.28)}
+.navicon{font-size:28px;line-height:1;margin-bottom:5px}
+.navlabel{font-size:11px;font-weight:1000;letter-spacing:.04em}
+#menu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(rgba(21,102,180,.03),rgba(5,27,66,.34));pointer-events:auto}
+.panel{width:min(390px,84vw);border-radius:28px;padding:24px;color:#fff;text-align:center;background:linear-gradient(160deg,rgba(24,76,140,.9),rgba(7,31,73,.93));border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(15px);box-shadow:0 28px 90px rgba(4,26,66,.38),inset 0 1px 0 rgba(255,255,255,.2)}
+.title{font-size:42px;line-height:.93;font-weight:1000;letter-spacing:-.04em}
+.subtitle{font-size:13px;line-height:1.45;opacity:.88;margin:14px 0 18px}
 #play{width:100%;min-height:54px;border:0;border-radius:17px;background:linear-gradient(180deg,#fff,#dcecff);color:#082858;font-size:16px;font-weight:1000;box-shadow:0 9px 22px rgba(0,25,70,.25)}
-.tip{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:900;opacity:.9;white-space:nowrap}
 #loading{margin-top:10px;font-size:12px;opacity:.78}
-@media (max-width:600px){.top{padding:12px}.badge{padding:8px 11px;border-radius:15px}.pos{font-size:25px}.bar{width:35vw}.title{font-size:38px}#message{font-size:32px}#item{width:74px;height:74px;border-radius:22px;font-size:30px}.tip{bottom:100px;font-size:10px}.cluster{gap:7px}}
+@media(max-width:700px){
+  .top{grid-template-columns:auto 1fr auto;padding:10px;gap:7px}
+  .badge{padding:8px 10px;border-radius:16px}
+  .pos{font-size:26px}.small{font-size:9px}
+  .level{font-size:30px}
+  .rightHud{gap:5px}.resource{min-width:68px}.resource b{font-size:17px}.resource .icon{font-size:16px}
+  .progressBadge{max-width:44vw}
+  .tip{bottom:98px;font-size:11px;padding:12px 24px}.tip:after{font-size:29px}
+  .bottomnav{bottom:10px}.navcard{width:74px;height:64px;border-radius:14px}.navicon{font-size:21px}.navlabel{font-size:8px}
+  #item{width:70px;height:70px;right:12px;bottom:12px;border-radius:21px;font-size:29px}
+  #speed{left:12px;bottom:12px}.speedBadge{padding:8px 10px!important}
+  #speed b{font-size:25px}
+  #message{font-size:28px}
+}
+@media(max-width:430px){
+  .bottomnav{display:none}
+  .tip{bottom:88px}
+  .level{font-size:25px}
+  .progressBadge{max-width:40vw}
+}
 </style>
 <script type="importmap">
 {
@@ -44,25 +75,49 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 <div id="game"></div>
 <div id="hud">
   <div class="top">
-    <div class="cluster">
-      <div class="badge"><div class="small">POSITION</div><div class="pos"><span id="rank">6</span><span style="font-size:14px;opacity:.72"> / 6</span></div></div>
-      <div class="badge"><div class="small">RACE PROGRESS</div><div class="bar"><div id="progress"></div></div></div>
+    <div class="badge">
+      <div class="small">POSITION</div>
+      <div class="pos"><span id="rank">6</span><span style="font-size:14px;opacity:.75"> / 6</span></div>
     </div>
-    <div class="badge"><div class="small">LAP</div><b>1 / 1</b></div>
+
+    <div class="centerHud">
+      <div class="badge progressBadge">
+        <div class="small">RACE PROGRESS</div>
+        <div class="bar"><div id="progress"></div></div>
+      </div>
+      <div class="level">LEVEL 2</div>
+    </div>
+
+    <div class="rightHud">
+      <div class="badge"><div class="small">LAP</div><b style="font-size:22px">1 / 2</b></div>
+      <div class="badge resource"><span class="icon">💵</span><b>95</b></div>
+      <div class="badge resource"><span class="icon">⚡</span><b>0</b></div>
+      <div class="badge resource"><span class="icon">🛡️</span><b>0</b></div>
+    </div>
   </div>
+
   <div id="message">HOLD TO ACCELERATE</div>
-  <div id="speed" class="badge"><b>0</b><span class="small">KM/H</span></div>
-  <div class="tip badge">HOLD TO ACCELERATE · DRAG TO STEER</div>
+  <div id="speed" class="badge speedBadge"><b>0</b><span class="small">KM/H</span></div>
+  <div class="tip badge">HOLD TO RIDE</div>
+
+  <div class="bottomnav">
+    <div class="navcard"><div class="navicon">🏎️</div><div class="navlabel">GARAGE</div></div>
+    <div class="navcard"><div class="navicon">📋</div><div class="navlabel">MISSIONS</div></div>
+    <div class="navcard"><div class="navicon">🎮</div><div class="navlabel">QUESTS</div></div>
+  </div>
 </div>
+
 <button id="item" disabled>?</button>
+
 <div id="menu">
   <div class="panel">
     <div class="title">VELOCITY<br>RIVALS</div>
-    <div class="subtitle">High-speed arcade racing with assisted cornering and combat pickups. Hold to accelerate, drag to steer, and time rockets, mines and turbo boosts to pass the field.</div>
-    <button id="play" disabled>LOADING HIGH-DETAIL VEHICLES…</button>
-    <div id="loading">Preparing track and PBR vehicle assets</div>
+    <div class="subtitle">High-speed arcade racing with assisted cornering and combat pickups. Hold to accelerate, drag to steer, and use items to pass the field.</div>
+    <button id="play" disabled>LOADING 3D ASSETS…</button>
+    <div id="loading">Preparing track and vehicles</div>
   </div>
 </div>
-<script type="module" src="./main.js?v=visuals-5"></script>
+
+<script type="module" src="./main.js?v=visuals-6"></script>
 </body>
 </html>
