@@ -31,15 +31,13 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 #message.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .tip{position:fixed;bottom:118px;left:50%;transform:translateX(-50%);padding:17px 44px;text-align:center;font-size:16px;font-weight:1000;white-space:nowrap;border-radius:34px}
 .tip:after{content:"↔";display:block;font-size:38px;line-height:.8;margin-top:4px;opacity:.9}
-.bottomnav{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:6px;pointer-events:none}
-.navcard{width:104px;height:82px;border-radius:18px;background:linear-gradient(180deg,rgba(26,118,225,.96),rgba(6,66,143,.97));border:1px solid rgba(255,255,255,.2);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(3,34,80,.28)}
-.navicon{font-size:28px;line-height:1;margin-bottom:5px}
-.navlabel{font-size:11px;font-weight:1000;letter-spacing:.04em}
 #menu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(rgba(21,102,180,.03),rgba(5,27,66,.34));pointer-events:auto}
 .panel{width:min(390px,84vw);border-radius:28px;padding:24px;color:#fff;text-align:center;background:linear-gradient(160deg,rgba(24,76,140,.9),rgba(7,31,73,.93));border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(15px);box-shadow:0 28px 90px rgba(4,26,66,.38),inset 0 1px 0 rgba(255,255,255,.2)}
 .title{font-size:42px;line-height:.93;font-weight:1000;letter-spacing:-.04em}
 .subtitle{font-size:13px;line-height:1.45;opacity:.88;margin:14px 0 18px}
 #play{width:100%;min-height:54px;border:0;border-radius:17px;background:linear-gradient(180deg,#fff,#dcecff);color:#082858;font-size:16px;font-weight:1000;box-shadow:0 9px 22px rgba(0,25,70,.25)}
+#garage{width:100%;min-height:46px;margin-top:10px;border:1px solid rgba(255,255,255,.32);border-radius:15px;background:rgba(6,42,93,.58);color:#fff;font-size:13px;font-weight:900;letter-spacing:.04em;cursor:pointer}
+#garage:active{transform:scale(.985)}
 #loading{margin-top:10px;font-size:12px;opacity:.78}
 @media(max-width:700px){
   .top{grid-template-columns:auto 1fr auto;padding:10px;gap:7px}
@@ -49,14 +47,12 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   .rightHud{gap:5px}.resource{min-width:68px}.resource b{font-size:17px}.resource .icon{font-size:16px}
   .progressBadge{max-width:44vw}
   .tip{bottom:98px;font-size:11px;padding:12px 24px}.tip:after{font-size:29px}
-  .bottomnav{bottom:10px}.navcard{width:74px;height:64px;border-radius:14px}.navicon{font-size:21px}.navlabel{font-size:8px}
   #item{width:70px;height:70px;right:12px;bottom:12px;border-radius:21px;font-size:29px}
   #speed{left:12px;bottom:12px}.speedBadge{padding:8px 10px!important}
   #speed b{font-size:25px}
   #message{font-size:28px}
 }
 @media(max-width:430px){
-  .bottomnav{display:none}
   .tip{bottom:88px}
   .level{font-size:25px}
   .progressBadge{max-width:40vw}
@@ -77,7 +73,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   <div class="top">
     <div class="badge">
       <div class="small">POSITION</div>
-      <div class="pos"><span id="rank">6</span><span style="font-size:14px;opacity:.75"> / 6</span></div>
+      <div class="pos"><span id="rank">8</span><span style="font-size:14px;opacity:.75"> / 8</span></div>
     </div>
 
     <div class="centerHud">
@@ -99,12 +95,6 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   <div id="message">STEER THROUGH TURNS</div>
   <div id="speed" class="badge speedBadge"><b>0</b><span class="small">KM/H</span></div>
   <div class="tip badge">DRAG TO STEER THROUGH TURNS</div>
-
-  <div class="bottomnav">
-    <div class="navcard"><div class="navicon">🏎️</div><div class="navlabel">GARAGE</div></div>
-    <div class="navcard"><div class="navicon">📋</div><div class="navlabel">MISSIONS</div></div>
-    <div class="navcard"><div class="navicon">🎮</div><div class="navlabel">QUESTS</div></div>
-  </div>
 </div>
 
 <button id="item" disabled>?</button>
@@ -114,6 +104,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
     <div class="title">VELOCITY<br>RIVALS</div>
     <div class="subtitle">Acceleration is automatic. Steering is fully manual: guide the car through every turn, dodge traffic, collect pickups, stay off the edges, and line up attacks.</div>
     <button id="play" disabled>LOADING 3D ASSETS…</button>
+    <button id="garage" type="button">🏎️ GARAGE</button>
     <div id="loading">Preparing track and vehicles</div>
   </div>
 </div>
@@ -123,6 +114,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   await import('./missile-fx.js?v=1');
   await import('./item-fx.js?v=1');
   await import('./level-one-rules.js?v=1');
+  await import('./field-size.js?v=1');
   await import('./main-loader.js?v=4');
 </script>
 </body>
