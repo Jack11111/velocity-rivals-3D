@@ -3,27 +3,60 @@ import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 
-// Velocity Rivals performance layer.
-// Runs before main.js so the existing gameplay can stay unchanged while the
-// expensive rendering/asset paths are replaced with cheaper equivalents.
+// Velocity Rivals performance-first rendering layer.
+// Preserve the high-detail foreground car and core track presentation, while
+// spending substantially less GPU/CPU time on resolution, shadows, post-FX,
+// distant opponents and repeated scenery.
 
-// 1) Cap render resolution. 1.8x DPR was extremely expensive on Retina/4K.
+const isMobile = matchMedia('(max-width: 820px)').matches;
+const maxPixelRatio = isMobile ? 0.98 : 1.12;
+const minPixelRatio = isMobile ? 0.72 : 0.78;
+
+// 1) Cap Retina/4K render resolution, then adapt it to measured frame time.
 const originalSetPixelRatio = THREE.WebGLRenderer.prototype.setPixelRatio;
 THREE.WebGLRenderer.prototype.setPixelRatio = function (ratio) {
-  const cap = matchMedia('(max-width: 820px)').matches ? 1.05 : 1.25;
-  return originalSetPixelRatio.call(this, Math.min(ratio || 1, cap));
+  return originalSetPixelRatio.call(this, Math.min(ratio || 1, maxPixelRatio));
 };
 
-// 2) Disable real-time shadow maps. The scene has hundreds of objects and the
-// shadow pass was rendering them again every frame. Reflections/materials stay.
+const perfStates = new WeakMap();
 const originalRendererRender = THREE.WebGLRenderer.prototype.render;
 THREE.WebGLRenderer.prototype.render = function (scene, camera) {
+  // Hundreds of scene objects made shadow-map rendering disproportionately
+  // expensive. The materials/environment still provide depth and reflections.
   if (this.shadowMap) this.shadowMap.enabled = false;
+
+  const now = performance.now();
+  let state = perfStates.get(this);
+  if (!state) {
+    state = { last: now, avgMs: 16.7, frames: 0, coolDown: 0 };
+    perfStates.set(this, state);
+  } else {
+    const elapsed = now - state.last;
+    state.last = now;
+    if (elapsed > 1 && elapsed < 180) state.avgMs = state.avgMs * 0.94 + elapsed * 0.06;
+    state.frames++;
+
+    // Adjust at most every ~90 rendered frames to avoid visible oscillation.
+    if (state.frames >= 90) {
+      state.frames = 0;
+      const current = this.getPixelRatio();
+      let next = current;
+      if (state.avgMs > 23.5 && current > minPixelRatio) {
+        next = Math.max(minPixelRatio, current - 0.10);
+        state.coolDown = 2;
+      } else if (state.avgMs < 16.2 && state.coolDown <= 0 && current < maxPixelRatio) {
+        next = Math.min(maxPixelRatio, current + 0.04);
+      } else if (state.coolDown > 0) {
+        state.coolDown--;
+      }
+      if (Math.abs(next - current) > 0.01) originalSetPixelRatio.call(this, next);
+    }
+  }
+
   return originalRendererRender.call(this, scene, camera);
 };
 
-// 3) Render the scene once per frame instead of the former render+bloom passes.
-// This preserves ACES tone mapping/PBR but removes the largest post-FX cost.
+// 2) Render once per frame. Keep ACES/PBR, remove the extra bloom/composer pass.
 const originalComposerRender = EffectComposer.prototype.render;
 EffectComposer.prototype.render = function (deltaTime) {
   const renderPass = this.passes?.find(p => p?.scene && p?.camera);
@@ -32,9 +65,8 @@ EffectComposer.prototype.render = function (deltaTime) {
   this.renderer.render(renderPass.scene, renderPass.camera);
 };
 
-// 4) Use the high-detail 14 MB FBX only for the player's large foreground car.
-// Opponents are small on screen, so lightweight sports cars are visually close
-// at race distance but massively cheaper to render.
+// 3) Keep the large high-detail FBX for the player's foreground car only.
+// Lightweight sports-car GLBs are enough for the five smaller AI opponents.
 const AI_URLS = [
   'https://raw.githubusercontent.com/Arslan12216775/kenney_car-kit/master/Models/GLB%20format/sedan-sports.glb',
   'https://raw.githubusercontent.com/Arslan12216775/kenney_car-kit/master/Models/GLB%20format/hatchback-sports.glb',
@@ -63,14 +95,13 @@ THREE.Object3D.prototype.clone = function (recursive = true) {
   if (this.userData?.velocityHeavyCarSource && aiBases.length) {
     const n = (this.userData.velocityCloneCount || 0) + 1;
     this.userData.velocityCloneCount = n;
-    // clone #1 is player; #2-#6 are AI opponents.
     if (n > 1) return originalClone.call(aiBases[(n - 2) % aiBases.length], true);
   }
   return originalClone.call(this, recursive);
 };
 
-// 5) Batch the hundreds of curb blocks and lane dashes into InstancedMesh draw
-// calls. Also prune distant palm/cloud decoration that is visually redundant.
+// 4) Batch repeated curb/lane meshes and aggressively thin decoration that is
+// visually redundant at racing speed.
 const inheritedAdd = THREE.Object3D.prototype.add;
 const batches = new Map();
 let batchTimer = null;
@@ -97,10 +128,11 @@ function scheduleBatchFlush() {
       const mesh = new THREE.InstancedMesh(entry.geometry, entry.material, entry.items.length);
       entry.items.forEach((item, i) => mesh.setMatrixAt(i, item.matrix));
       mesh.instanceMatrix.needsUpdate = true;
+      mesh.frustumCulled = true;
       inheritedAdd.call(entry.parent, mesh);
       entry.items.length = 0;
     }
-  }, 80);
+  }, 60);
 }
 
 THREE.Object3D.prototype.add = function (...objects) {
@@ -120,22 +152,25 @@ THREE.Object3D.prototype.add = function (...objects) {
       continue;
     }
 
-    // Palm groups in main.js contain one trunk plus nine capsule leaves.
+    // Main.js palm groups: one trunk + capsule leaves. Keep about one quarter
+    // and only four leaves per retained palm. At racing speed the silhouette is
+    // nearly unchanged, but the draw-call savings are large.
     if (object?.isGroup && object.children?.length >= 8) {
       const capsuleChildren = object.children.filter(c => c.geometry?.type === 'CapsuleGeometry');
       const hasPalmTrunk = object.children.some(c => c.geometry?.type === 'CylinderGeometry');
       if (hasPalmTrunk && capsuleChildren.length >= 6) {
         palmGroupCount++;
-        if (palmGroupCount % 3 !== 0) continue; // keep about one third
-        // Four leaves are enough at racing distance.
+        if (palmGroupCount % 4 !== 0) continue;
         capsuleChildren.slice(4).forEach(c => object.remove(c));
       }
     }
 
+    // Clouds are decorative sprites. Keep one in three.
     if (object?.isSprite) {
       cloudCount++;
-      if (cloudCount % 2 === 0) continue;
+      if (cloudCount % 3 !== 1) continue;
     }
+
     keep.push(object);
   }
   if (keep.length) return inheritedAdd.apply(this, keep);
