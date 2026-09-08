@@ -36,8 +36,8 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .title{font-size:42px;line-height:.93;font-weight:1000;letter-spacing:-.04em}
 .subtitle{font-size:13px;line-height:1.45;opacity:.88;margin:14px 0 18px}
 #play{width:100%;min-height:54px;border:0;border-radius:17px;background:linear-gradient(180deg,#fff,#dcecff);color:#082858;font-size:16px;font-weight:1000;box-shadow:0 9px 22px rgba(0,25,70,.25)}
-#garage{width:100%;min-height:46px;margin-top:10px;border:1px solid rgba(255,255,255,.32);border-radius:15px;background:rgba(6,42,93,.58);color:#fff;font-size:13px;font-weight:900;letter-spacing:.04em;cursor:pointer}
-#garage:active{transform:scale(.985)}
+#garage{width:100%;min-height:46px;margin-top:10px;border:1px solid rgba(255,255,255,.28);border-radius:15px;background:rgba(6,42,93,.46);color:rgba(255,255,255,.72);font-size:13px;font-weight:900;letter-spacing:.04em}
+#garage:disabled{cursor:default;opacity:.76}
 #loading{margin-top:10px;font-size:12px;opacity:.78}
 @media(max-width:700px){
   .top{grid-template-columns:auto 1fr auto;padding:10px;gap:7px}
@@ -104,7 +104,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
     <div class="title">VELOCITY<br>RIVALS</div>
     <div class="subtitle">Acceleration is automatic. Steering is fully manual: guide the car through every turn, dodge traffic, collect pickups, stay off the edges, and line up attacks.</div>
     <button id="play" disabled>LOADING 3D ASSETS…</button>
-    <button id="garage" type="button">🏎️ GARAGE</button>
+    <button id="garage" type="button" disabled title="Garage customization will be added later">🏎️ GARAGE</button>
     <div id="loading">Preparing track and vehicles</div>
   </div>
 </div>
@@ -114,7 +114,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   await import('./missile-fx.js?v=1');
   await import('./item-fx.js?v=1');
   await import('./level-one-rules.js?v=1');
-  await import('./field-size.js?v=1');
+  await import('./field-size.js?v=2');
   await import('./main-loader.js?v=4');
 </script>
 </body>
