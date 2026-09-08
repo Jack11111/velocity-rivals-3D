@@ -52,4 +52,4 @@ await import('./performance-fix.js?v=2');
 await import('./controls-v2.js?v=1');
 await import('./controls-v3.js?v=1');
 await import('./controls-ui.js?v=2');
-await import('./garage-vehicles.js?v=1');
+await import('./garage-vehicles.js?v=2');
